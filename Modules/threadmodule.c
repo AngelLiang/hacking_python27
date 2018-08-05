@@ -157,6 +157,9 @@ static PyTypeObject Locktype = {
     lock_methods,                       /* tp_methods */
 };
 
+/*
+ * 创建新的lock对象
+ */
 static lockobject *
 newlockobject(void)
 {
@@ -650,6 +653,14 @@ t_bootstrap(void *boot_raw)
     PyThread_exit_thread();
 }
 
+/*
+ * 在thread_PyThread_start_new_thread中，Python虚拟机通过三个主要动作，
+ * 完成一个线程的创建。
+ * 1、创建并初始化bootstate结构boot，在boot中，将保存关于线程的一切信息，
+ *    如：线程过程，线程过程的参数等。
+ * 2、初始化Python的多线程环境。
+ * 3、以boot为参数，创建操作系统的原生线程。
+ */
 static PyObject *
 thread_PyThread_start_new_thread(PyObject *self, PyObject *fargs)
 {
@@ -675,9 +686,13 @@ thread_PyThread_start_new_thread(PyObject *self, PyObject *fargs)
                         "optional 3rd arg must be a dictionary");
         return NULL;
     }
+    // 1、创建bootstate结构
     boot = PyMem_NEW(struct bootstate, 1);
     if (boot == NULL)
         return PyErr_NoMemory();
+    // boot->interp保存了Python的PyInter-preterState对象，
+    // 这个对象携带了Python的module pool这样的全局信息，
+    // Python中所有的thread都会共享这些全局信息。
     boot->interp = PyThreadState_GET()->interp;
     boot->func = func;
     boot->args = args;
@@ -690,7 +705,9 @@ thread_PyThread_start_new_thread(PyObject *self, PyObject *fargs)
     Py_INCREF(func);
     Py_INCREF(args);
     Py_XINCREF(keyw);
+    // 2、初始化多线程环境
     PyEval_InitThreads(); /* Start the interpreter's thread-awareness */
+    // 3、创建线程
     ident = PyThread_start_new_thread(t_bootstrap, (void*) boot);
     if (ident == -1) {
         PyErr_SetString(ThreadError, "can't start new thread");
@@ -746,6 +763,9 @@ A subthread can use this function to interrupt the main thread."
 
 static lockobject *newlockobject(void);
 
+/*
+ * 线程生成lock
+ */
 static PyObject *
 thread_PyThread_allocate_lock(PyObject *self)
 {
@@ -758,6 +778,9 @@ PyDoc_STRVAR(allocate_doc,
 \n\
 Create a new lock object.  See help(LockType) for information about locks.");
 
+/*
+ * 获取线程id
+ */
 static PyObject *
 thread_get_ident(PyObject *self)
 {
@@ -853,6 +876,10 @@ requiring allocation in multiples of the system memory page size\n\
 (4kB pages are common; using multiples of 4096 for the stack size is\n\
 the suggested approach in the absence of more specific information).");
 
+/*
+ * 为Python使用者提供的所有多线程机制接口。
+ * 有的接口以不同的形式出现了两次，比如`start_new_thread`和`start_new`。
+ */
 static PyMethodDef thread_methods[] = {
     {"start_new_thread",        (PyCFunction)thread_PyThread_start_new_thread,
                             METH_VARARGS,

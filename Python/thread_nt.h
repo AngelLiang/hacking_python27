@@ -21,6 +21,7 @@ InitializeNonRecursiveMutex(PNRMUTEX mutex)
 {
     mutex->owned = -1 ;  /* No threads have entered NonRecursiveMutex */
     mutex->thread_id = 0 ;
+    // CreateEvent is windows api.
     mutex->hevent = CreateEvent(NULL, FALSE, FALSE, NULL) ;
     return mutex->hevent != NULL ;      /* TRUE if the mutex is created */
 }
@@ -116,6 +117,7 @@ static unsigned __stdcall
 bootstrap(void *call)
 {
     callobj *obj = (callobj*)call;
+    // 这里得到函数t_bootstrap
     void (*func)(void*) = obj->func;
     void *arg = obj->arg;
     HeapFree(GetProcessHeap(), 0, obj);
@@ -211,11 +213,12 @@ PyThread_exit_thread(void)
 PyThread_type_lock
 PyThread_allocate_lock(void)
 {
+    // 学习点1：PNRMUTEX
     PNRMUTEX aLock;
 
     dprintf(("PyThread_allocate_lock called\n"));
     if (!initialized)
-        PyThread_init_thread();
+        PyThread_init_thread(); // 学习点2：PyThread_init_thread()
 
     aLock = AllocNonRecursiveMutex() ;
 
@@ -232,6 +235,13 @@ PyThread_free_lock(PyThread_type_lock aLock)
     FreeNonRecursiveMutex(aLock) ;
 }
 
+
+
+/*
+ * 创建GIL之后，当前线程就开始遵循Python的多线程机制规则：
+ * 在调用任何Python C API之前，必须首先获得GIL。
+ * 因此，PyEval_InitThreads紧接着通过PyThread_acquire_lock尝试获得GIL。
+ */
 /*
  * Return 1 on success if the lock was acquired
  *
