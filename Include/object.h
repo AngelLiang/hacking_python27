@@ -87,6 +87,7 @@ whose size is determined when the object is allocated.
 #define PyVarObject_HEAD_INIT(type, size)       \
     PyObject_HEAD_INIT(type) size,
 
+/* ob_size指明的是所容纳元素的个数，而不是字节的数量 */
 /* PyObject_VAR_HEAD defines the initial segment of all variable-size
  * container objects.  These end with a declaration of an array with 1
  * element, but enough space is malloc'ed so that the array actually
@@ -98,6 +99,11 @@ whose size is determined when the object is allocated.
     Py_ssize_t ob_size; /* Number of items in variable part */
 #define Py_INVALID_SIZE (Py_ssize_t)-1
 
+/* PyObject是整个Python对象的核心
+ * 在Pyhton内部，每一个对象都拥有相同的对象头部。
+ * 这就使得在Python中，对对象的引用变得非常的统一，
+ * 我们只需要用一个 PyObject* 指针就可以引用任意一个对象。
+ */
 /* Nothing is actually declared to be a PyObject, but every pointer to
  * a Python object can be cast to a PyObject*.  This is inheritance built
  * by hand.  Similarly every pointer to a variable-size Python object can,
@@ -883,6 +889,7 @@ not implemented for a given type combination.
 PyAPI_DATA(PyObject) _Py_NotImplementedStruct; /* Don't use this directly */
 #define Py_NotImplemented (&_Py_NotImplementedStruct)
 
+/* 不同的比较操作指令 */
 /* Rich comparison opcodes */
 #define Py_LT 0
 #define Py_LE 1

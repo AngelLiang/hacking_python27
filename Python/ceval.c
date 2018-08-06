@@ -2459,6 +2459,7 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
             DISPATCH();
         }
 
+        // 构建tuple
         TARGET(BUILD_TUPLE)
         {
             x = PyTuple_New(oparg);
@@ -2473,6 +2474,7 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
             break;
         }
 
+        // 构建list
         TARGET(BUILD_LIST)
         {
             x =  PyList_New(oparg);
@@ -2548,6 +2550,7 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
             break;
         }
 
+        // 加载属性
         TARGET(LOAD_ATTR)
         {
             w = GETITEM(names, oparg);
@@ -2559,16 +2562,19 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
             break;
         }
 
+        // 比较操作
         TARGET(COMPARE_OP)
         {
             w = POP();
             v = TOP();
+            // 1、PyIntObject对象的快速通道
             if (PyInt_CheckExact(w) && PyInt_CheckExact(v)) {
                 /* INLINE: cmp(int, int) */
                 register long a, b;
                 register int res;
                 a = PyInt_AS_LONG(v);
                 b = PyInt_AS_LONG(w);
+                // 根据字节码指令的指令参数选择不同的比较操作
                 switch (oparg) {
                 case PyCmp_LT: res = a <  b; break;
                 case PyCmp_LE: res = a <= b; break;
@@ -2584,11 +2590,13 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
                 Py_INCREF(x);
             }
             else {
+              // 2、一般对象的慢速通道
               slow_compare:
                 x = cmp_outcome(oparg, v, w);
             }
             Py_DECREF(v);
             Py_DECREF(w);
+            // 将比较结果压入到运行时栈中
             SET_TOP(x);
             if (x == NULL) break;
             PREDICT(POP_JUMP_IF_FALSE);
@@ -2596,6 +2604,7 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
             DISPATCH();
         }
 
+        // 导入名字
         TARGET(IMPORT_NAME)
         {
             long res;
@@ -2805,13 +2814,17 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 #endif
         }
 
+        // 获取迭代器
         TARGET_NOARG(GET_ITER)
         {
+            // 从运行时栈获得PyListObject对象
             /* before: [obj]; after [getiter(obj)] */
             v = TOP();
+            // 获得PyListObject对象的iterator
             x = PyObject_GetIter(v);
             Py_DECREF(v);
             if (x != NULL) {
+                // 将PyListObject对象的iterator压入堆栈
                 SET_TOP(x);
                 PREDICT(FOR_ITER);
                 DISPATCH();
@@ -2862,6 +2875,7 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
             goto fast_block_end;
         }
 
+        // SETUP_LOOP 和 SETUP_EXCEPT 都调用 _setup_finally
         TARGET_WITH_IMPL(SETUP_LOOP, _setup_finally)
         TARGET_WITH_IMPL(SETUP_EXCEPT, _setup_finally)
         TARGET(SETUP_FINALLY)

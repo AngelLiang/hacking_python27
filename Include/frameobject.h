@@ -15,12 +15,26 @@ typedef struct {
 
 typedef struct _frame {
     PyObject_VAR_HEAD
+    
+    // 执行环境链上的前一个frame
     struct _frame *f_back;	/* previous frame, or NULL */
+    
+    // PyCodeObject对象
     PyCodeObject *f_code;	/* code segment */
+    
+    // builtin名字空间
     PyObject *f_builtins;	/* builtin symbol table (PyDictObject) */
+    
+    // global名字空间
     PyObject *f_globals;	/* global symbol table (PyDictObject) */
+    
+    // local名字空间
     PyObject *f_locals;		/* local symbol table (any mapping) */
+    
+    // 运行时栈的栈底位置
     PyObject **f_valuestack;	/* points after the last local */
+    
+    // 运行时栈的栈顶位置
     /* Next free slot in f_valuestack.  Frame creation sets to f_valuestack.
        Frame evaluation usually NULLs it, but a frame that yields sets it
        to the current stack top. */
@@ -37,7 +51,11 @@ typedef struct _frame {
     PyObject *f_exc_type, *f_exc_value, *f_exc_traceback;
 
     PyThreadState *f_tstate;
+    
+    // 上一条字节码指令在f_code中偏移位置
     int f_lasti;		/* Last instruction if called */
+    
+    // 当前字节码对应的源代码行
     /* Call PyFrame_GetLineNumber() instead of reading this field
        directly.  As of 2.3 f_lineno is only valid when tracing is
        active (i.e. when f_trace is set).  At other times we use
@@ -46,6 +64,8 @@ typedef struct _frame {
     int f_lineno;		/* Current line number */
     int f_iblock;		/* index in f_blockstack */
     PyTryBlock f_blockstack[CO_MAXBLOCKS]; /* for try and loop blocks */
+    
+    // 动态内存，维护（局部变量+cell对象集合+free对象集合+运行时栈）所需要的空间
     PyObject *f_localsplus[1];	/* locals+stack, dynamically sized */
 } PyFrameObject;
 

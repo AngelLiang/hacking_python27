@@ -3087,13 +3087,14 @@ PyObject_GetIter(PyObject *o)
     PyTypeObject *t = o->ob_type;
     getiterfunc f = NULL;
     if (PyType_HasFeature(t, Py_TPFLAGS_HAVE_ITER))
-        f = t->tp_iter;
+        f = t->tp_iter; // 获得类型对象中的 tp_iter 操作
     if (f == NULL) {
         if (PySequence_Check(o))
             return PySeqIter_New(o);
         return type_error("'%.200s' object is not iterable", o);
     }
     else {
+        // 通过 tp_iter 操作获得 iterator 
         PyObject *res = (*f)(o);
         if (res != NULL && !PyIter_Check(res)) {
             PyErr_Format(PyExc_TypeError,
