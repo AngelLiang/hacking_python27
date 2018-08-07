@@ -807,6 +807,8 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
     register PyObject *stream = NULL;    /* for PRINT opcodes */
     register PyObject **fastlocals, **freevars;
     PyObject *retval = NULL;            /* Return value */
+
+    // 通过 PyThreadState_GET 获得当前活动线程对应的线程状态对象
     PyThreadState *tstate = PyThreadState_GET();
     PyCodeObject *co;
 
@@ -981,6 +983,7 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
     if (Py_EnterRecursiveCall(""))
         return NULL;
 
+    // 设置线程状态对象中的fream
     tstate->frame = f;
 
     if (tstate->use_tracing) {
@@ -1065,6 +1068,7 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
         goto on_error;
     }
 
+    // 虚拟机主循环
     for (;;) {
 #ifdef WITH_TSC
         if (inst1 == 0) {
@@ -1146,7 +1150,7 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 #endif
         }
 
-// 快速获取下一条指令
+    // 快速获取下一条指令
     fast_next_opcode:
         f->f_lasti = INSTR_OFFSET();
 
@@ -1212,6 +1216,7 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
         /* Main switch on opcode */
         READ_TIMESTAMP(inst0);
 
+        // 指令分派
         switch (opcode) {
 
         /* BEWARE!
