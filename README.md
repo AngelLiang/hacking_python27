@@ -2,6 +2,8 @@
 
 深入学习Python27源码
 
+version: 2.7.15
+
 ## 目录结构
 
 - `Objects`：该目录包含了所有Python的内建对象，包括整数、list、dict等。同时，还包括了Python在运行时所需要的所有内部使用对象的实现。

@@ -1052,6 +1052,9 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
     filename = PyString_AsString(co->co_filename);
 #endif
 
+    // why变量
+    // 指示在退出这个巨大的for循环时Python执行引擎状态
+    // 是执行时产生错误还是正常结束？
     why = WHY_NOT;
     err = 0;
     x = Py_None;        /* Not a reference, just anything non-NULL */
@@ -1143,6 +1146,7 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
 #endif
         }
 
+// 快速获取下一条指令
     fast_next_opcode:
         f->f_lasti = INSTR_OFFSET();
 
@@ -1171,12 +1175,16 @@ PyEval_EvalFrameEx(PyFrameObject *f, int throwflag)
         }
 
         /* Extract opcode and argument */
-
+        // 获得字节码指令
         opcode = NEXTOP();
         oparg = 0;   /* allows oparg to be stored in a register because
             it doesn't have to be remembered across a full loop */
+        
+        // 如果指令需要参数，获取指令参数
         if (HAS_ARG(opcode))
             oparg = NEXTARG();
+    
+    // 调度指令
     dispatch_opcode:
 #ifdef DYNAMIC_EXECUTION_PROFILE
 #ifdef DXPAIRS
