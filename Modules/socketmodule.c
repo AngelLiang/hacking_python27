@@ -13,6 +13,11 @@ Limitations:
 - Additional restrictions apply on some non-Unix platforms (compensated
   for by socket.py).
 
+- 只有 AF_INET、AF_INET6 和 AF_UNIX 地址类支持可移植的，因为 AF_PACKET、
+  AF_NETLINK 和 AF_TIPC 只支持Linux。
+- 没有 read/write 操作
+- 在一些非Unix平台上添加了限制。
+
 Module interface:
 
 - socket.error: exception raised for socket specific errors
